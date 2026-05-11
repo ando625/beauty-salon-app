@@ -1,0 +1,109 @@
+# docker-compose.yml
+
+
+services:
+
+  # ================================
+  # PostgreSQL（データベース本体）
+  # MySQLでいう mysql サービスと同じ役割
+  # ================================
+  database:
+  # ↑ このコンテナの名前を「database」にする
+  # 他のコンテナからは「database」という名前で呼べる
+
+    image: postgres:16-alpine
+    # ↑ DockerHubにある公式PostgreSQLイメージを使う
+    # 「16」= バージョン16
+    # 「alpine」= 軽量Linux版（容量小さく起動が速い）
+    # Dockerfileを自分で書かなくていい！
+
+    container_name: beauty_salon_db
+    # ↑ 起動したコンテナに名前をつける
+    # 「docker ps」で見た時にわかりやすくなる
+
+    env_file:
+      - .env
+    # ↑「.envファイルの値を読み込んで使ってね」
+    # .envに書いたPOSTGRES_DBなどがここで使われる
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      # ↑ 作るデータベースの名前（.envから取得）
+      # ${POSTGRES_DB} = .envのPOSTGRES_DBの値を使う
+      # MySQLのMYSQL_DATABASEと同じ役割！
+
+      POSTGRES_USER: ${POSTGRES_USER}
+      # ↑ PostgreSQLのユーザー名（.envから取得）
+
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # ↑ パスワード（.envから取得）
+
+    ports:
+      - "5432:5432"
+      # ↑ 「自分のPC:コンテナの中」のポートをつなぐ
+      # MySQLが3306番だったのに対してPostgreSQLは5432番
+      # localhost:5432 でアクセスできる
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # ↑ データの永続化（超重要！）
+      # コンテナを削除してもデータは消えない
+      # 「postgres_data」= 下のvolumesで定義した保存場所
+      # MySQLなら /var/lib/mysql だった部分
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      # ↑ 「DBが本当に準備OKか確認するコマンド」
+      # pg_isready = PostgreSQL専用の準備確認コマンド
+
+      interval: 10s
+      # ↑ 10秒ごとに確認する
+
+      timeout: 5s
+      # ↑ 5秒以内に返事がなければ失敗とみなす
+
+      retries: 5
+      # ↑ 5回失敗したら「起動失敗」と判断する
+
+  # ================================
+  # pgAdmin（ブラウザでDBを見る管理画面）
+  # MySQLでいう phpMyAdmin と全く同じ役割！
+  # ================================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    # ↑ pgAdminの公式イメージを使う
+
+    container_name: beauty_salon_pgadmin
+
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      # ↑ pgAdminのログインメールアドレス（.envから取得）
+
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      # ↑ pgAdminのログインパスワード（.envから取得）
+
+    ports:
+      - "8080:80"
+      # ↑ ブラウザで http://localhost:8080 で開ける
+
+    depends_on:
+      database:
+        condition: service_healthy
+    # ↑「databaseのhealthcheckが通ってから起動してね」
+    # という順番の指定
+    # これがないとDBより先にpgAdminが起動してエラーになる
+
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      # ↑ pgAdminの設定を永続化（接続設定などが消えない）
+
+# ================================
+# データの保存場所（名前付きボリューム）
+# ================================
+volumes:
+  postgres_data:
+  # ↑ PostgreSQLのデータ保存場所に「postgres_data」と名前をつける
+  # Dockerが管理してくれるので場所は気にしなくてOK
+
+  pgadmin_data:
+  # ↑ pgAdminの設定保存場所

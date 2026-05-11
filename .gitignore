@@ -141,3 +141,17 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+
+# Docker
+.docker/
+
+# Prisma
+prisma/migrations/dev.db
+
+# Mac固有のファイル（Macユーザーは入れておくと良い）
+.DS_Store
+
+# VSCode の設定（個人の設定は上げない）
+.vscode/
+!.vscode/extensions.json
