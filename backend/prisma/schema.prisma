@@ -1,0 +1,197 @@
+// schema.prisma
+// データベースの設計図（LaravelのMigrationファイルに相当）
+// ここにテーブルの形を書くと自動でDBに反映してくれる！
+
+generator client {
+  provider = "prisma-client-js"
+  
+  // ↑「TypeScript用のコードを自動生成してね」という設定
+}
+
+datasource db {
+  provider = "postgresql"
+  // ↑「PostgreSQLを使いますよ」という宣言
+  
+  url      = env("DATABASE_URL")
+}
+
+// ================================
+// ユーザーテーブル
+// 会員登録したお客さん・スタッフ・管理者
+// ================================
+model User {
+  id        Int      @id @default(autoincrement())
+  // ↑ id = 自動で1,2,3...と増える番号（主キー）
+  // 「@id」= 主キーですよという印
+  // 「@default(autoincrement())」= 自動で番号を振る
+
+  email     String   @unique
+  // ↑ メールアドレス（@unique = 重複不可）
+
+  password  String?
+  // ↑ パスワード（「?」= nullでもOK = 非会員は不要）
+
+  name      String
+  // ↑ 名前
+
+  phone     String?
+  // ↑ 電話番号（任意）
+
+  role      Role     @default(CUSTOMER)
+  // ↑ 役割（CUSTOMER=お客さん / STAFF=スタッフ / ADMIN=管理者）
+  // 「@default(CUSTOMER)」= 何も指定しなければお客さんになる
+
+  createdAt DateTime @default(now())
+  // ↑ 登録日時（自動で現在時刻が入る）
+
+  updatedAt DateTime @updatedAt
+  // ↑ 更新日時（更新するたびに自動で現在時刻になる）
+
+  // リレーション（他のテーブルとの関係）
+  reservations Reservation[]
+  // ↑「このユーザーは複数の予約を持てる」という関係
+  // 「[]」= 複数という意味
+
+  staffProfile StaffProfile?
+  // ↑「このユーザーはスタッフプロフィールを1つ持てる」
+}
+
+// ================================
+// 役割の種類（列挙型）
+// ================================
+enum Role {
+  CUSTOMER  // お客さん
+  STAFF     // スタッフ
+  ADMIN     // 管理者
+  // ↑ enumとは「決まった値の中から選ぶ」型
+  // 例：信号は「赤・青・黄」しかない = enumで表現
+}
+
+// ================================
+// スタッフプロフィールテーブル
+// スタッフだけが持つ追加情報
+// ================================
+model StaffProfile {
+  id          Int     @id @default(autoincrement())
+  
+  userId      Int     @unique
+  // ↑ どのユーザーのプロフィールか（1対1の関係）
+  
+  bio         String?
+  // ↑ 自己紹介文
+  
+  user        User    @relation(fields: [userId], references: [id])
+  // ↑「userIdはUserテーブルのidと紐づいてる」という設定
+  // LaravelのbelongsToと同じ意味！
+
+  reservations Reservation[]
+  // ↑「このスタッフは複数の予約を担当できる」
+}
+
+// ================================
+// メニューテーブル
+// カット・カラーなどのメニュー一覧
+// ================================
+model Menu {
+  id          Int      @id @default(autoincrement())
+  name        String
+  // ↑ メニュー名（例：カット、カラー）
+  
+  price       Int
+  // ↑ 料金（円）
+  
+  duration    Int
+  // ↑ 所要時間（分）例：60 = 60分
+  
+  category    String
+  // ↑ カテゴリ（例：カット / カラー / パーマ）
+  
+  isActive    Boolean  @default(true)
+  // ↑ 表示中かどうか（falseにすると非表示）
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  reservationMenus ReservationMenu[]
+  // ↑「このメニューは複数の予約に使われる」
+}
+
+// ================================
+// 予約テーブル（メイン！）
+// ================================
+model Reservation {
+  id          Int      @id @default(autoincrement())
+  
+  userId      Int?
+  // ↑ 会員のお客さんのID（非会員はnullになる）
+  
+  staffId     Int
+  // ↑ 担当スタッフのID
+  
+  date        DateTime
+  // ↑ 予約日（例：2024-12-01）
+  
+  timeSlot    String
+  // ↑ 時間枠（例："10:00" / "13:00" / "15:00"）
+  
+  status      ReservationStatus @default(PENDING)
+  // ↑ 予約状態（PENDING=仮予約 / CONFIRMED=確定 / CANCELLED=キャンセル）
+  
+  notes       String?
+  // ↑ 備考・要望など
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // リレーション
+  user        User?         @relation(fields: [userId], references: [id])
+  staff       StaffProfile  @relation(fields: [staffId], references: [id])
+  
+  reservationMenus ReservationMenu[]
+  // ↑「この予約は複数のメニューを持てる」（カット＋カラーなど）
+  
+  guestInfo   GuestInfo?
+  // ↑「非会員の場合のお客さん情報」
+}
+
+// ================================
+// 予約状態の種類
+// ================================
+enum ReservationStatus {
+  PENDING    // 仮予約（まだ確定してない）
+  CONFIRMED  // 確定
+  CANCELLED  // キャンセル
+}
+
+// ================================
+// 予約×メニューの中間テーブル
+// 1つの予約に複数メニューを紐づけるために必要！
+// ================================
+model ReservationMenu {
+  id            Int         @id @default(autoincrement())
+  reservationId Int
+  menuId        Int
+
+  reservation   Reservation @relation(fields: [reservationId], references: [id])
+  menu          Menu        @relation(fields: [menuId], references: [id])
+
+  @@unique([reservationId, menuId])
+  // ↑「同じ予約に同じメニューを2回登録できない」というルール
+}
+
+// ================================
+// 非会員お客さん情報テーブル
+// ログインせずに予約した人の情報
+// ================================
+model GuestInfo {
+  id            Int         @id @default(autoincrement())
+  reservationId Int         @unique
+  name          String
+  // ↑ 名前
+  phone         String
+  // ↑ 電話番号
+  email         String
+  // ↑ メールアドレス
+
+  reservation   Reservation @relation(fields: [reservationId], references: [id])
+}
