@@ -4,6 +4,64 @@
 services:
 
   # ================================
+  # NestJS バックエンド（追加！）
+  # ================================
+  backend:
+    build: ./backend
+    # ↑「./backend/Dockerfileを読んでビルドして」
+
+    container_name: beauty_salon_backend
+
+    ports:
+      - "3001:3001"
+    # ↑ localhost:3001 でAPIにアクセスできる
+
+    volumes:
+      - ./backend:/app
+      # ↑「backendフォルダをコンテナの/appと同期」
+      # ファイルを変更すると即コンテナに反映される！
+      - /app/node_modules
+      # ↑「node_modulesはコンテナ内のを使う」
+      # PCとコンテナのnode_modulesを混ぜない！
+
+    environment:
+      - DATABASE_URL=postgresql://postgres:password123@database:5432/beauty_salon
+      # ↑ コンテナ内からはlocalhostじゃなくてdatabaseで接続！
+
+    depends_on:
+      database:
+        condition: service_healthy
+    # ↑「DBが完全に起動してから起動してね」
+
+  # ================================
+  # Next.js フロントエンド（追加！）
+  # ================================
+  frontend:
+    build: ./frontend
+    # ↑「./frontend/Dockerfileを読んでビルドして」
+
+    container_name: beauty_salon_frontend
+
+    ports:
+      - "3000:3000"
+    # ↑ localhost:3000 でブラウザからアクセスできる
+
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+      # ↑「バックエンドのAPIのURLはここだよ」
+      # 「NEXT_PUBLIC_」= ブラウザ側でも使えるNext.jsのルール
+
+    depends_on:
+      - backend
+    # ↑「backendが起動してから起動してね」
+
+  
+
+  # ================================
   # PostgreSQL（データベース本体）
   # MySQLでいう mysql サービスと同じ役割
   # ================================

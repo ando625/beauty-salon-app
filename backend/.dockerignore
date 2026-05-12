@@ -1,0 +1,21 @@
+# .dockerignore
+# Gitの .gitignore と同じ考え方！
+# Dockerコンテナにコピーしないファイルのリスト
+
+node_modules
+# ↑ 超巨大なので絶対除外！コンテナ内でnpm installするから不要
+
+.next
+# ↑ Next.jsのビルド結果（自動生成されるから不要）
+
+dist
+# ↑ NestJSのビルド結果（自動生成されるから不要）
+
+.env
+# ↑ 秘密ファイルはコピーしない！
+
+.git
+# ↑ Gitの管理フォルダは不要
+
+README.md
+# ↑ ドキュメントは不要
