@@ -94,7 +94,7 @@ model StaffProfile {
 // ================================
 model Menu {
   id          Int      @id @default(autoincrement())
-  name        String
+  name        String   @unique
   // ↑ メニュー名（例：カット、カラー）
   
   price       Int
@@ -134,8 +134,8 @@ model Reservation {
   timeSlot    String
   // ↑ 時間枠（例："10:00" / "13:00" / "15:00"）
   
-  status      ReservationStatus @default(PENDING)
-  // ↑ 予約状態（PENDING=仮予約 / CONFIRMED=確定 / CANCELLED=キャンセル）
+  status      ReservationStatus @default(CONFIRMED)
+  // ↑ 予約状態（ CONFIRMED=確定 / CANCELLED=キャンセル）
   
   notes       String?
   // ↑ 備考・要望など
@@ -158,7 +158,6 @@ model Reservation {
 // 予約状態の種類
 // ================================
 enum ReservationStatus {
-  PENDING    // 仮予約（まだ確定してない）
   CONFIRMED  // 確定
   CANCELLED  // キャンセル
 }

@@ -24,3 +24,57 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ================================
+   react-calendar カスタムスタイル
+   ================================ */
+
+.react-calendar {
+  width: 100% !important;
+  border: none !important;
+  font-family: inherit !important;
+}
+
+.react-calendar__tile {
+  padding: 12px 4px !important;
+  border-radius: 8px !important;
+}
+
+.react-calendar__tile--now {
+  background: #f3f4f6 !important;
+  color: #111827 !important;
+  font-weight: bold !important;
+}
+
+.react-calendar__tile--active,
+.react-calendar__tile--active:enabled:hover {
+  background: #10b981 !important;
+  color: white !important;
+  border-radius: 8px !important;
+}
+
+.react-calendar__tile:enabled:hover {
+  background: #d1fae5 !important;
+  border-radius: 8px !important;
+}
+
+.react-calendar__navigation button {
+  border-radius: 8px !important;
+  font-size: 14px !important;
+}
+
+.react-calendar__navigation button:enabled:hover {
+  background: #f3f4f6 !important;
+}
+
+.react-calendar__month-view__days__day--weekend:nth-child(7n) {
+  color: #3b82f6 !important;
+}
+
+.react-calendar__month-view__days__day--weekend:nth-child(7n+1) {
+  color: #ef4444 !important;
+}
+
+.react-calendar__month-view__days__day--neighboringMonth {
+  color: #d1d5db !important;
+}

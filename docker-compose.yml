@@ -27,6 +27,8 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:password123@database:5432/beauty_salon
       # ↑ コンテナ内からはlocalhostじゃなくてdatabaseで接続！
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - SALON_EMAIL=${SALON_EMAIL}
 
     depends_on:
       database:
@@ -38,27 +40,18 @@ services:
   # ================================
   frontend:
     build: ./frontend
-    # ↑「./frontend/Dockerfileを読んでビルドして」
-
     container_name: beauty_salon_frontend
-
     ports:
       - "3000:3000"
-    # ↑ localhost:3000 でブラウザからアクセスできる
-
     volumes:
       - ./frontend:/app
       - /app/node_modules
-
-    environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:3001
-      # ↑「バックエンドのAPIのURLはここだよ」
-      # 「NEXT_PUBLIC_」= ブラウザ側でも使えるNext.jsのルール
-
+    env_file:
+      - ./frontend/.env
+      # ↑ environment の代わりに env_file を使う
+      # env_file はファイルをそのまま読むので $ が変数解釈されない！
     depends_on:
       - backend
-    # ↑「backendが起動してから起動してね」
-
   
 
   # ================================
