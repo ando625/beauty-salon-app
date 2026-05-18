@@ -4,6 +4,8 @@
 
 > Next.js × NestJS × Prisma × PostgreSQL × Docker
 
+
+https://github.com/user-attachments/assets/a8c58712-8937-43e8-95f0-76219689a190
 ---
 
 ## アプリの概要
