@@ -4,10 +4,6 @@
 
 > Next.js × NestJS × Prisma × PostgreSQL × Docker
 
-
-
-https://github.com/user-attachments/assets/a3d50bb3-726d-43fa-b558-992873a1eac5
-
 ---
 
 ## アプリの概要
@@ -378,15 +374,33 @@ ADMIN_PASSWORD=your_admin_password
 
 ---
 
-### 手順3 : Dockerコンテナを起動
+
+### 手順3 : 依存パッケージをインストール
+
+```bash
+cd frontend
+npm install
+cd ..
+```
+
+---
+
+### 手順4 : Dockerコンテナを起動
 
 ```bash
 docker compose up -d --build
 ```
 
+起動後にコンテナ内にもパッケージをインストール：
+
+```bash
+docker compose exec frontend npm install jose bcryptjs
+docker compose exec frontend npm install --save-dev @types/bcryptjs
+```
+
 ---
 
-### 手順4 : DBマイグレーション・シードデータ投入
+### 手順5 : DBマイグレーション・シードデータ投入
 
 ```bash
 # マイグレーション実行
@@ -398,7 +412,7 @@ docker compose exec backend npm run seed
 
 ---
 
-### 手順5 : アクセス確認
+### 手順6 : アクセス確認
 
 | サービス | URL |
 |----------|-----|
